@@ -99,7 +99,7 @@
     font-variant: small-caps;
   }
   header.banner .timer-row {
-    margin-top: 10px;
+    margin-top: 14px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -107,16 +107,18 @@
     font-variant: small-caps;
     letter-spacing: 0.15em;
     color: #e6c578;
+    font-size: clamp(14px, 1.4vw, 22px);
   }
   .countdown {
     font-family: "Courier New", monospace;
-    font-size: clamp(20px, 2.2vw, 30px);
+    font-size: clamp(28px, 3.2vw, 48px);
     color: #fff1c2;
     background: rgba(0,0,0,0.4);
-    padding: 4px 16px;
+    padding: 6px 22px;
     border: 1px solid var(--gold);
     border-radius: 4px;
     letter-spacing: 0.1em;
+    font-weight: bold;
   }
   .countdown.paused { color: #aaa; }
   .countdown.fire { color: #ff7b5e; text-shadow: 0 0 12px #ff5a3a; }
@@ -138,8 +140,11 @@
     border-radius: 6px;
     box-shadow: inset 0 0 60px rgba(110, 70, 20, 0.35), 0 10px 30px var(--shadow);
     padding: 24px;
-    overflow: auto;
+    overflow: hidden;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
   }
   .board::before {
     content: "";
@@ -163,55 +168,63 @@
     text-align: center;
     color: var(--ink-soft);
     font-style: italic;
-    margin-top: 12vh;
-    font-size: clamp(16px, 1.6vw, 22px);
+    margin-top: 18vh;
+    font-size: clamp(24px, 2.4vw, 38px);
     opacity: 0.7;
   }
-  .law-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 14px;
-  }
-  .law-card {
+  .law-card.single {
+    flex: 1;
     background: linear-gradient(140deg, #faecc4, #e2c98a);
-    border: 1.5px solid var(--parchment-edge);
-    border-radius: 4px;
-    padding: 14px 16px 16px;
+    border: 3px solid var(--parchment-edge);
+    border-radius: 8px;
+    /* Tight top padding pulls the label up near the front of the box. */
+    padding: clamp(14px, 1.6vw, 28px) clamp(32px, 3.5vw, 70px) clamp(32px, 3.5vw, 70px);
     position: relative;
-    box-shadow: 0 4px 10px var(--shadow), inset 0 0 22px rgba(110, 70, 20, 0.18);
-    font-size: clamp(15px, 1.35vw, 22px);
-    line-height: 1.35;
+    box-shadow: 0 8px 24px var(--shadow), inset 0 0 60px rgba(110, 70, 20, 0.22);
     color: var(--ink);
-    min-height: 90px;
+    min-height: 0;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     text-align: center;
+    font-weight: 700;
+    word-wrap: break-word;
   }
-  .law-card .law-no {
-    position: absolute;
-    top: 4px;
-    left: 8px;
-    font-size: 0.55em;
+  .law-card .law-text {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: clamp(36px, 5vw, 110px);
+    line-height: 1.15;
+  }
+  .law-card .law-label {
+    font-size: clamp(14px, 1.2vw, 24px);
     font-variant: small-caps;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.3em;
     color: var(--ink-soft);
-    opacity: 0.7;
+    opacity: 0.75;
+    font-weight: normal;
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(110, 70, 20, 0.25);
+    padding-bottom: 8px;
   }
   .law-card .seal {
     position: absolute;
-    bottom: -8px;
-    right: -8px;
-    width: 36px;
-    height: 36px;
+    bottom: -12px;
+    right: -12px;
+    width: 56px;
+    height: 56px;
     background: radial-gradient(circle at 30% 30%, #d63a2e, var(--wax-red-dark));
     border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 0 8px rgba(0,0,0,0.4);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.4), inset 0 0 12px rgba(0,0,0,0.4);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #f7d57a;
-    font-size: 14px;
+    font-size: 22px;
     font-weight: bold;
     transform: rotate(-12deg);
   }
@@ -712,12 +725,15 @@ const DEFAULT_LAWS = [
 ];
 
 /* ===== State management ===== */
-const STORAGE_KEY = "lawboard.state.v1";
+// v2: single-active-law model. activeLawId points to the current "law of the
+// realm"; all laws live permanently in poolLaws and cycle through the active
+// slot via voting.
+const STORAGE_KEY = "lawboard.state.v2";
 
 const blankState = () => ({
   config: { intervalMinutes: 10, muted: false },
   poolLaws: DEFAULT_LAWS.map((text, i) => ({ id: `l${i + 1}`, text })),
-  activeLaws: [],
+  activeLawId: null,
   currentVote: null,
   timerStartedAt: null,
   paused: true,
@@ -774,7 +790,7 @@ function pickTwoRandom(list) {
   return [list[i], list[j]];
 }
 function findLaw(id) {
-  return state.poolLaws.find(l => l.id === id) || state.activeLaws.find(l => l.id === id);
+  return state.poolLaws.find(l => l.id === id);
 }
 function escapeHtml(s) {
   return s.replace(/[&<>"']/g, c =>
@@ -793,6 +809,24 @@ function fmtCountdown(ms) {
   const m = Math.floor(total / 60);
   const s = total % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+// Shrink the active-law text size only if it actually overflows. The CSS
+// clamp() sets the max; this is the truth check that prevents clipping.
+function fitActiveLaw() {
+  const text = document.querySelector(".law-card.single .law-text");
+  if (!text) return;
+  text.style.fontSize = "";
+  const baseFs = parseFloat(getComputedStyle(text).fontSize);
+  const overflows = () => text.scrollHeight > text.clientHeight + 1;
+  if (!overflows()) return;
+  let lo = 22, hi = Math.round(baseFs);
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    text.style.fontSize = mid + "px";
+    if (overflows()) hi = mid - 1; else lo = mid;
+  }
+  text.style.fontSize = lo + "px";
 }
 
 /* ===== Actions ===== */
@@ -814,7 +848,10 @@ function beginSession() {
 
 function startVote() {
   if (state.phase !== "idle") return;
-  const pair = pickTwoRandom(state.poolLaws);
+  // Exclude the current active law from the voting pool — the vote is always
+  // a chance to REPLACE the current ruler, not re-elect it.
+  const candidates = state.poolLaws.filter(l => l.id !== state.activeLawId);
+  const pair = pickTwoRandom(candidates);
   if (!pair) return;
   playGong();
   setState({
@@ -837,8 +874,7 @@ function pickWinner(winnerId) {
   if (state.phase !== "voting" || !state.currentVote) return;
   const winner = findLaw(winnerId);
   if (!winner) return;
-  state.poolLaws = state.poolLaws.filter(l => l.id !== winnerId);
-  state.activeLaws.push({ ...winner, enactedAt: Date.now() });
+  state.activeLawId = winnerId;
   state.phase = "enacting";
   state.currentVote = { ...state.currentVote, winnerId };
   persist();
@@ -849,14 +885,12 @@ function pickWinner(winnerId) {
   // Build the enacting overlay as a one-shot side effect (NOT inside render),
   // so subsequent re-renders during the enacting phase — e.g., the user
   // clicking Settings — don't spawn a duplicate overlay.
-  const lawText = state.activeLaws[state.activeLaws.length - 1].text;
-  const decreeNo = state.activeLaws.length;
   const overlay = document.createElement("div");
   overlay.className = "enacting-overlay";
   overlay.innerHTML = `
     <div class="enacting-card">
-      Decree N&deg; ${decreeNo}
-      <div style="margin-top:14px;">${escapeHtml(lawText)}</div>
+      The Realm Has Spoken
+      <div style="margin-top:14px;">${escapeHtml(winner.text)}</div>
       <div class="stamp">ENACTED<small>by the Realm</small></div>
     </div>
   `;
@@ -957,8 +991,6 @@ function bannerHtml(showTimer) {
   return `
     <header class="banner">
       <h1>The Law Board</h1>
-      <div class="flourish">&#10070; &#10026; &#10070;</div>
-      <div class="subtitle">Senatus Populusque &middot; Royal Court &middot; A.D. MMXXVI</div>
       ${cd}
     </header>
   `;
@@ -1018,40 +1050,26 @@ function renderSetup() {
 }
 
 function renderIdleOrEnacting() {
-  const board = state.activeLaws.length === 0
-    ? `<div class="board-empty">No laws yet decreed. Convene the vote to begin the chronicle.</div>`
-    : `<div class="law-grid">
-         ${state.activeLaws.map((l, i) => `
-           <div class="law-card">
-             <div class="law-no">Decree N&deg; ${i + 1}</div>
-             ${escapeHtml(l.text)}
-             <div class="seal">&#10070;</div>
-           </div>`).join("")}
-       </div>`;
+  const activeLaw = state.activeLawId ? findLaw(state.activeLawId) : null;
+  // Vote pool excludes the active law (replacement, not re-election),
+  // so we need ≥ 2 candidates beyond the current ruler.
+  const canVote = state.poolLaws.filter(l => l.id !== state.activeLawId).length >= 2;
+  const voteLabel = canVote ? "Convene the Vote" : "Not Enough Laws";
 
-  const showSidebar = state.poolLaws.length > 0;
-  const poolHtml = state.poolLaws.length === 0
-    ? `<div style="text-align:center;font-style:italic;color:var(--ink-soft);margin-top:20px;">All laws have been enacted.</div>`
-    : state.poolLaws.map(l => `<div class="pool-item">&ldquo;${escapeHtml(l.text)}&rdquo;</div>`).join("");
-
-  const canVote = state.poolLaws.length >= 2;
-  const voteLabel = canVote
-    ? "Convene the Vote"
-    : (state.poolLaws.length === 1 ? "Only One Law Remains" : "All Decrees Enacted");
+  const board = activeLaw
+    ? `<div class="law-card single">
+         <div class="law-label">The Law of the Realm</div>
+         <div class="law-text"><span>${escapeHtml(activeLaw.text)}</span></div>
+         <div class="seal">&#10070;</div>
+       </div>`
+    : `<div class="board-empty">No law yet decreed. Convene the vote to begin.</div>`;
 
   app.innerHTML = `
     ${bannerHtml(true)}
-    <main class="idle ${showSidebar ? "" : "no-side"}">
+    <main class="idle no-side">
       <div class="board">
-        <h2>Active Decrees of the Realm &middot; ${state.activeLaws.length} in force</h2>
         ${board}
       </div>
-      ${showSidebar ? `
-        <aside class="sidebar">
-          <h3>Pending Decrees</h3>
-          <div class="pool-count">${state.poolLaws.length} awaiting judgment</div>
-          <div class="pool-list">${poolHtml}</div>
-        </aside>` : ""}
     </main>
     <footer class="controls">
       <button class="btn primary" id="convene" ${canVote ? "" : "disabled"}>
@@ -1067,6 +1085,8 @@ function renderIdleOrEnacting() {
   document.getElementById("pause").onclick = togglePause;
   document.getElementById("reset-timer").onclick = resetTimer;
   document.getElementById("settings").onclick = openSettings;
+
+  fitActiveLaw();
 }
 
 function renderVoting() {
