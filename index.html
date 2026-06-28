@@ -190,15 +190,31 @@
     font-weight: 700;
     word-wrap: break-word;
   }
-  .law-card .law-text {
+  .law-card .law-content {
     flex: 1;
     min-height: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: clamp(8px, 1.5vh, 24px);
     overflow: hidden;
-    font-size: clamp(36px, 5vw, 110px);
-    line-height: 1.15;
+  }
+  .law-card .law-name {
+    font-size: calc(clamp(44px, 6vw, 130px) * var(--law-scale, 1));
+    line-height: 1.05;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+  }
+  .law-card .law-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(clamp(26px, 3.5vw, 80px) * var(--law-scale, 1));
+    line-height: 1.2;
+    font-weight: 500;
   }
   .law-card .law-label {
     font-size: clamp(14px, 1.2vw, 24px);
@@ -492,6 +508,19 @@
     color: var(--ink-soft);
     opacity: 0.7;
   }
+  .vote-card .vote-name {
+    font-size: clamp(28px, 3vw, 52px);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 18px;
+    line-height: 1.1;
+  }
+  .vote-card .vote-desc {
+    font-size: clamp(18px, 2.2vw, 34px);
+    line-height: 1.3;
+    font-weight: 500;
+  }
   .vs {
     display: flex;
     align-items: center;
@@ -545,6 +574,20 @@
   @keyframes cardSlide {
     from { transform: translateY(40px) scale(0.9); opacity: 0; }
     to   { transform: translateY(0)    scale(1);   opacity: 1; }
+  }
+  .enacting-card .enacting-name {
+    font-size: clamp(36px, 4.5vw, 80px);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 18px;
+    line-height: 1.1;
+  }
+  .enacting-card .enacting-desc {
+    font-size: clamp(20px, 2.4vw, 36px);
+    line-height: 1.3;
+    margin-top: 14px;
+    font-weight: 500;
   }
 
   .stamp {
@@ -686,49 +729,27 @@ function playSample(buf, gain) {
 
 /* ===== Default laws (eclectic Roman / medieval / 1776 mash-up) ===== */
 const DEFAULT_LAWS = [
-  "Hear ye! Whosoever utters the word 'literally' shall drink forthwith.",
-  "Any noble caught upon their phone at table must rise and deliver a toast.",
-  "By decree of the Senate: thou shalt address the host as 'Your Excellency.'",
-  "Compliments may not be received without a counter-compliment, on pain of sip.",
-  "The last to clink at 'cheers' drinketh twice.",
-  "Pointing is forbidden; offenders must gesture only with an open palm.",
-  "All laughter exceeding five seconds requires a celebratory sip.",
-  "Mention of work, taxes, or rent is hereby outlawed.",
-  "Whosoever speaks the word 'I' must instead say 'thy humble servant.'",
-  "Refilling another's cup before one's own shall be rewarded with a toast in thy honour.",
-  "Let no guest sit alone for more than three minutes; the nearest noble must approach.",
-  "Upon hearing the word 'because,' all present must raise their cups.",
-  "Crossing of legs at table is forbidden in the Senate; offenders forfeit a sip.",
-  "When the host stands, all present shall stand; failure costs a drink.",
-  "He who arrives late shall be appointed Cupbearer for ten minutes.",
-  "No man nor woman may refuse a dance when summoned by another.",
-  "All disagreements shall be settled by rock, parchment, or dagger (scissors).",
-  "Use of modern slang ('bro,' 'lit,' 'vibe') shall require a sip and a public apology.",
-  "Whosoever telleth a joke that earns no laugh must drink alone.",
-  "The first to check the clock is hereby named the Royal Timekeeper for the night.",
-  "Toasts must begin with 'Hear ye, hear ye!' or be deemed invalid.",
-  "Any photograph taken must include at least three subjects, by senatorial order.",
-  "Speaking of one's exes is high treason; the punishment is two drinks.",
-  "All present must learn one new fact about another guest before midnight.",
-  "Whosoever sneezes shall be blessed by all within earshot, on pain of sip.",
-  "Music requests must be sung aloud before being submitted to the bard.",
-  "No noble may complain of the temperature; the realm provides what it provides.",
-  "The phrase 'I shouldn't' is grounds for immediate consumption.",
-  "When the bell tolls (the doorbell rings), all present shall raise a cheer.",
-  "Whosoever spills must declare 'A libation to the gods!' and continue without shame.",
-  "Every guest must, at some point, propose a toast to a fallen comrade (a snack consumed too soon).",
-  "All who yawn must be tickled, or must yield a sip in lieu.",
-  "The phrase 'no offense' shall be followed by a drink, for offense shall surely follow.",
-  "Whosoever quotes a film must reveal which one, or drink.",
-  "At the stroke of every hour, the eldest present shall lead a brief and dignified hurrah.",
-  "Anyone caught humming a song must finish the verse aloud.",
+  "The Cooperative Sip: You cannot serve yourself. To take a sip, a person near you must physically feed it to you.",
+  "The Human Couch: No one is allowed to sit on furniture alone. If you want to sit on the couch or a chair, you must sit on someone's lap, or have them sit on yours.",
+  "The Name-Drop Penalty: You are banned from using anyone's real name. To get someone's attention or talk to them, you must invent a funny, descriptive nickname on the spot. If you don't, drink.",
+  "The Drinker's Roulette: Keep a die next to the drink station. Before you are allowed to pour a drink or open a can, you must roll. If you roll 1 or 2, you must take a sip from a friend's drink instead of pouring your own.",
+  "Double or Nothing: Leave two dice on the main table. Anyone walking past can roll them. You get one roll. If you roll doubles, everyone must take a sip.",
+  "The Ping Pong Sniper: If you successfully sink a ping pong ball into someone else's solo cup from at least 6 feet away, they must immediately take a sip.",
+  "The Sniper's Gaze: If you accidentally lock eyes with someone across the room, you are now in a staring contest. Loser takes a sip.",
+  "Say Cheese!: Take the most recent photo in your camera roll with 3 or more people in it and recreate it with people at the party. Post it to the partiful album.",
+  "Pong Strangers: All games of pong must take place with teammates that did not know each other before entering.",
+  "Time Travel: If anyone asks you what the date or time is now, or when any event happened, you must respond with 1776 BC. If you do not, take a drink.",
+  "You Are Hilarious: Find someone and tell them a joke. They must laugh for at least 30 seconds. If they don't, they must drink.",
+  "Who Are You?: For the next hour, any story you tell about yourself you must replace all people in the story with historical figures related to your costume or someone else's costume.",
+  "Sing Along: You must sing along for the choruses of the songs for the next 5 songs. If you mess up or don't sing, drink!",
+  "Very Nice!: All conversations must start with a compliment that doesn't make sense today but might have centuries ago.",
 ];
 
 /* ===== State management ===== */
 // v2: single-active-law model. activeLawId points to the current "law of the
 // realm"; all laws live permanently in poolLaws and cycle through the active
 // slot via voting.
-const STORAGE_KEY = "lawboard.state.v2";
+const STORAGE_KEY = "lawboard.state.v3";
 
 const blankState = () => ({
   config: { intervalMinutes: 10, muted: false },
@@ -796,6 +817,13 @@ function escapeHtml(s) {
   return s.replace(/[&<>"']/g, c =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
+// Laws are stored as "Name: Description"; split on the first colon so the
+// renderer can show the name as a heading and the description below.
+function parseLaw(text) {
+  const idx = text.indexOf(":");
+  if (idx === -1) return { name: null, description: text };
+  return { name: text.slice(0, idx).trim(), description: text.slice(idx + 1).trim() };
+}
 function intervalMs() {
   return Math.max(0.1, state.config.intervalMinutes) * 60 * 1000;
 }
@@ -811,22 +839,23 @@ function fmtCountdown(ms) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-// Shrink the active-law text size only if it actually overflows. The CSS
-// clamp() sets the max; this is the truth check that prevents clipping.
+// Shrink the active-law content (name + description together) only if it
+// overflows. CSS sizes both via calc(... * var(--law-scale, 1)) so adjusting
+// the CSS variable scales them in lockstep. Binary search to ~0.003 in 8 iter.
 function fitActiveLaw() {
-  const text = document.querySelector(".law-card.single .law-text");
-  if (!text) return;
-  text.style.fontSize = "";
-  const baseFs = parseFloat(getComputedStyle(text).fontSize);
-  const overflows = () => text.scrollHeight > text.clientHeight + 1;
+  const card = document.querySelector(".law-card.single");
+  const content = card?.querySelector(".law-content");
+  if (!content) return;
+  card.style.setProperty("--law-scale", "1");
+  const overflows = () => content.scrollHeight > content.clientHeight + 1;
   if (!overflows()) return;
-  let lo = 22, hi = Math.round(baseFs);
-  while (lo < hi) {
-    const mid = Math.ceil((lo + hi) / 2);
-    text.style.fontSize = mid + "px";
-    if (overflows()) hi = mid - 1; else lo = mid;
+  let lo = 0.35, hi = 1.0;
+  for (let i = 0; i < 8; i++) {
+    const mid = (lo + hi) / 2;
+    card.style.setProperty("--law-scale", String(mid));
+    if (overflows()) hi = mid; else lo = mid;
   }
-  text.style.fontSize = lo + "px";
+  card.style.setProperty("--law-scale", String(lo));
 }
 
 /* ===== Actions ===== */
@@ -885,12 +914,14 @@ function pickWinner(winnerId) {
   // Build the enacting overlay as a one-shot side effect (NOT inside render),
   // so subsequent re-renders during the enacting phase — e.g., the user
   // clicking Settings — don't spawn a duplicate overlay.
+  const winnerP = parseLaw(winner.text);
   const overlay = document.createElement("div");
   overlay.className = "enacting-overlay";
   overlay.innerHTML = `
     <div class="enacting-card">
       The Realm Has Spoken
-      <div style="margin-top:14px;">${escapeHtml(winner.text)}</div>
+      ${winnerP.name ? `<div class="enacting-name">${escapeHtml(winnerP.name)}</div>` : ""}
+      <div class="enacting-desc">${escapeHtml(winnerP.description)}</div>
       <div class="stamp">ENACTED<small>by the Realm</small></div>
     </div>
   `;
@@ -1056,10 +1087,14 @@ function renderIdleOrEnacting() {
   const canVote = state.poolLaws.filter(l => l.id !== state.activeLawId).length >= 2;
   const voteLabel = canVote ? "Convene the Vote" : "Not Enough Laws";
 
+  const parsedActive = activeLaw ? parseLaw(activeLaw.text) : null;
   const board = activeLaw
     ? `<div class="law-card single">
          <div class="law-label">The Law of the Realm</div>
-         <div class="law-text"><span>${escapeHtml(activeLaw.text)}</span></div>
+         <div class="law-content">
+           ${parsedActive.name ? `<div class="law-name">${escapeHtml(parsedActive.name)}</div>` : ""}
+           <div class="law-text"><span>${escapeHtml(parsedActive.description)}</span></div>
+         </div>
          <div class="seal">&#10070;</div>
        </div>`
     : `<div class="board-empty">No law yet decreed. Convene the vote to begin.</div>`;
@@ -1097,20 +1132,23 @@ function renderVoting() {
     setState({ phase: "idle", currentVote: null, paused: false, timerStartedAt: Date.now() });
     return;
   }
+  const leftP = parseLaw(left.text);
+  const rightP = parseLaw(right.text);
+  const voteCardHtml = (id, parsed, tint, label) => `
+    <div class="vote-card${tint ? " tint-b" : ""}" data-pick="${id}">
+      <div class="vote-label">${label}</div>
+      ${parsed.name ? `<div class="vote-name">${escapeHtml(parsed.name)}</div>` : ""}
+      <div class="vote-desc">${escapeHtml(parsed.description)}</div>
+    </div>
+  `;
   app.innerHTML = `
     ${bannerHtml(false)}
     <div class="voting">
       <h2>Two Laws Are Proposed &mdash; Choose Which Shall Pass</h2>
       <div class="vote-cards">
-        <div class="vote-card" data-pick="${left.id}">
-          <div class="vote-label">Proposal the First</div>
-          ${escapeHtml(left.text)}
-        </div>
+        ${voteCardHtml(left.id, leftP, false, "Proposal the First")}
         <div class="vs">vs.</div>
-        <div class="vote-card tint-b" data-pick="${right.id}">
-          <div class="vote-label">Proposal the Second</div>
-          ${escapeHtml(right.text)}
-        </div>
+        ${voteCardHtml(right.id, rightP, true, "Proposal the Second")}
       </div>
       <span class="vote-cancel" id="vote-cancel">&laquo; cancel</span>
     </div>
